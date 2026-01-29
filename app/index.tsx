@@ -1,16 +1,6 @@
-import { Text, View } from "react-native";
+import { Redirect } from 'expo-router';
 
-export default function Home() {
-  return (
-    <View className="flex-1 items-center justify-center bg-slate-600">
-      <Text className="text-white text-xl">
-        PillaiBuzz Mobile Working 🚀
-        PillaiBuzz Mobile Working 🚀
-        PillaiBuzz Mobile Working 🚀
-        PillaiBuzz Mobile Working 🚀
-        PillaiBuzz Mobile Working 🚀
-        PillaiBuzz Mobile Working 🚀
-      </Text>
-    </View>
-  );
+export default function Index() {
+  return <Redirect href="/(auth)/signup" />;
 }
+

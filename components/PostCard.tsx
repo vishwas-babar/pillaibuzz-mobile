@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { Bookmark, Heart, MessageCircle } from 'lucide-react-native';
 import React from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
@@ -24,8 +25,18 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post }: PostCardProps) {
+  const router = useRouter();
+
+  const handlePress = () => {
+    router.push(`/post/${post._id}`);
+  };
+
   return (
-    <View className="bg-white rounded-2xl p-4 mb-4 shadow-sm mx-4 border border-gray-100">
+    <TouchableOpacity 
+      activeOpacity={0.9}
+      onPress={handlePress}
+      className="bg-white rounded-2xl p-4 mb-4 shadow-sm mx-4 border border-gray-100"
+    >
       {/* Header */}
       <View className="flex-row items-center mb-3">
         <Image 
@@ -73,6 +84,6 @@ export default function PostCard({ post }: PostCardProps) {
 
         <Text className="text-muted text-xs font-medium">{post.reads} reads</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }

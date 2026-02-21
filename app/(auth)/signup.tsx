@@ -1,12 +1,78 @@
 import { AntDesign, Feather, Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
-import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { useLogin } from '../../hooks/api/auth/use-login';
+import { useRegister } from '../../hooks/api/auth/use-register';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function Signup() {
   const router = useRouter();
-  const [focusedField, setFocusedField] = React.useState<string | null>(null);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
+
+  const { login } = useAuth();
+  
+  const { mutate: loginUser } = useLogin({
+    onSuccess: async (data) => {
+      await login(data.uid);
+      router.replace('/(tabs)/home');
+    },
+    onError: () => {
+      Alert.alert('Signup Successful', 'But login failed automatically. Please login manually.');
+      router.replace('/(auth)/login');
+    }
+  });
+
+  const { mutate: registerUser, isPending } = useRegister({
+    onSuccess: () => {
+      // Auto login
+      loginUser({ email, password });
+    },
+    onError: (error: any) => {
+      Alert.alert('Signup Failed', error?.response?.data?.message || 'Something went wrong during signup.');
+    }
+  });
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setProfilePhoto(result.assets[0]);
+    }
+  };
+
+  const handleSignup = () => {
+    if (!fullName || !username || !email || !password) {
+      Alert.alert('Validation Error', 'Please fill all required fields');
+      return;
+    }
+
+    registerUser({
+      name: fullName,
+      userId: username,
+      email: email,
+      password: password,
+      profilePhoto: profilePhoto ? {
+        uri: profilePhoto.uri,
+        name: profilePhoto.fileName || 'profile.jpg',
+        type: profilePhoto.mimeType || 'image/jpeg',
+      } : undefined,
+    });
+  };
 
   const getBorderColor = (fieldName: string) => {
     return focusedField === fieldName ? 'border-primary' : 'border-border';
@@ -46,9 +112,13 @@ export default function Signup() {
 
             {/* Profile Section */}
             <View className="items-center mb-6 relative">
-              <TouchableOpacity className="relative">
-                <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center border-2 border-dashed border-gray-300">
-                  <Feather name="user" size={32} color="#9CA3AF" />
+              <TouchableOpacity className="relative" onPress={pickImage}>
+                <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center border-2 border-dashed border-gray-300 overflow-hidden">
+                  {profilePhoto ? (
+                    <Image source={{ uri: profilePhoto.uri }} className="w-full h-full" />
+                  ) : (
+                    <Feather name="user" size={32} color="#9CA3AF" />
+                  )}
                 </View>
                 <View className="absolute bottom-0 right-0 bg-primary p-1.5 rounded-full border-2 border-surface">
                   <Ionicons name="camera" size={14} color="white" />
@@ -67,6 +137,8 @@ export default function Signup() {
                   className="flex-1 text-text text-sm h-full"
                   onFocus={() => setFocusedField('fullName')}
                   onBlur={() => setFocusedField(null)}
+                  value={fullName}
+                  onChangeText={setFullName}
                 />
               </View>
 
@@ -76,9 +148,12 @@ export default function Signup() {
                 <TextInput 
                   placeholder="User ID / Username" 
                   placeholderTextColor="#94A3B8"
+                  autoCapitalize="none"
                   className="flex-1 text-text text-sm h-full"
                   onFocus={() => setFocusedField('username')}
                   onBlur={() => setFocusedField(null)}
+                  value={username}
+                  onChangeText={setUsername}
                 />
               </View>
 
@@ -89,9 +164,12 @@ export default function Signup() {
                   placeholder="Email Address" 
                   placeholderTextColor="#94A3B8"
                   keyboardType="email-address"
+                  autoCapitalize="none"
                   className="flex-1 text-text text-sm h-full"
                   onFocus={() => setFocusedField('email')}
                   onBlur={() => setFocusedField(null)}
+                  value={email}
+                  onChangeText={setEmail}
                 />
               </View>
 
@@ -105,16 +183,23 @@ export default function Signup() {
                   className="flex-1 text-text text-sm h-full"
                   onFocus={() => setFocusedField('password')}
                   onBlur={() => setFocusedField(null)}
+                  value={password}
+                  onChangeText={setPassword}
                 />
               </View>
             </View>
 
             {/* Action */}
             <TouchableOpacity 
-              className="bg-primary py-3.5 rounded-full mt-6 shadow-md active:bg-blue-700"
-              onPress={() => router.replace('/(tabs)/home')}
+              className={`py-3.5 rounded-full mt-6 shadow-md ${isPending ? 'bg-primary/80' : 'bg-primary active:bg-blue-700'}`}
+              onPress={handleSignup}
+              disabled={isPending}
             >
-              <Text className="text-surface text-center font-bold text-base">Signup</Text>
+              {isPending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-surface text-center font-bold text-base">Signup</Text>
+              )}
             </TouchableOpacity>
 
             {/* Footer */}

@@ -1,12 +1,36 @@
 import { AntDesign, Feather } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLogin } from '../../hooks/api/auth/use-login';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function Login() {
   const router = useRouter();
-  const [focusedField, setFocusedField] = React.useState<string | null>(null);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { login } = useAuth();
+
+  const { mutate: loginUser, isPending } = useLogin({
+    onSuccess: async (data) => {
+      // `uid` returns the jwt token based on the curl response you provided
+      await login(data.uid);
+      router.replace('/(tabs)/home');
+    },
+    onError: (error: any) => {
+      Alert.alert('Login Failed', error?.response?.data?.message || 'Invalid credentials');
+    },
+  });
+
+  const handleLogin = () => {
+    if (!email || !password) {
+      Alert.alert('Validation Error', 'Please enter email and password');
+      return;
+    }
+    loginUser({ email, password });
+  };
 
   const getBorderColor = (fieldName: string) => {
     return focusedField === fieldName ? 'border-primary' : 'border-border';
@@ -54,9 +78,12 @@ export default function Login() {
                   placeholder="Email Address" 
                   placeholderTextColor="#94A3B8"
                   keyboardType="email-address"
+                  autoCapitalize="none"
                   className="flex-1 text-text text-sm h-full"
                   onFocus={() => setFocusedField('email')}
                   onBlur={() => setFocusedField(null)}
+                  value={email}
+                  onChangeText={setEmail}
                 />
               </View>
 
@@ -70,16 +97,23 @@ export default function Login() {
                   className="flex-1 text-text text-sm h-full"
                   onFocus={() => setFocusedField('password')}
                   onBlur={() => setFocusedField(null)}
+                  value={password}
+                  onChangeText={setPassword}
                 />
               </View>
             </View>
 
             {/* Action */}
             <TouchableOpacity 
-              className="bg-primary py-3.5 rounded-full mt-8 shadow-md active:bg-blue-700"
-              onPress={() => router.replace('/(tabs)/home')}
+              className={`py-3.5 rounded-full mt-8 shadow-md ${isPending ? 'bg-primary/80' : 'bg-primary active:bg-blue-700'}`}
+              onPress={handleLogin}
+              disabled={isPending}
             >
-              <Text className="text-surface text-center font-bold text-base">Login</Text>
+              {isPending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-surface text-center font-bold text-base">Login</Text>
+              )}
             </TouchableOpacity>
 
             {/* Footer */}

@@ -1,3 +1,15 @@
+export interface SearchUser {
+  _id: string;
+  userId: string;
+  name: string;
+  profilePhoto: string;
+  createdAt: string;
+}
+
+export interface SearchUsersResponse {
+  users: SearchUser[];
+}
+
 export interface User {
   _id: string;
   userId: string;

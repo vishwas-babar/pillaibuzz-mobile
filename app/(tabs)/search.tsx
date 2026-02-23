@@ -48,13 +48,13 @@ export default function SearchScreen() {
           <Text className="text-muted text-sm" numberOfLines={1}>@{item.userId}</Text>
         </View>
       </View>
-      <TouchableOpacity 
+      {/* <TouchableOpacity 
         className="px-4 py-1.5 rounded-full border bg-primary border-primary"
       >
         <Text className="text-sm font-semibold text-white">
           Follow
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </TouchableOpacity>
   );
 

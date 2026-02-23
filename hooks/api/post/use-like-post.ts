@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/axios';
 import { GetPostDetailsResponse, LikePostResponse } from '../../../types/post';
+import { GetCurrentUserResponse } from '../../../types/user';
 
 export const useLikePost = () => {
   const queryClient = useQueryClient();
@@ -14,11 +15,22 @@ export const useLikePost = () => {
       await queryClient.cancelQueries({ queryKey: ['post-details', postId] });
 
       const previousPostDetails = queryClient.getQueryData<GetPostDetailsResponse>(['post-details', postId]);
+      const currentUser = queryClient.getQueryData<GetCurrentUserResponse>(['current-user'])?.data;
 
-      if (previousPostDetails) {
+      if (previousPostDetails && currentUser) {
+        const wasLiked = previousPostDetails.postContent.likes.includes(currentUser._id);
+        const likes = wasLiked
+          ? previousPostDetails.postContent.likes.filter((userId) => userId !== currentUser._id)
+          : [...previousPostDetails.postContent.likes, currentUser._id];
+        const likesCount = Math.max(0, previousPostDetails.likesCount + (wasLiked ? -1 : 1));
+
         queryClient.setQueryData<GetPostDetailsResponse>(['post-details', postId], {
           ...previousPostDetails,
-          likesCount: previousPostDetails.likesCount + 1,
+          likesCount,
+          postContent: {
+            ...previousPostDetails.postContent,
+            likes,
+          },
         });
       }
 

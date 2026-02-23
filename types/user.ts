@@ -43,3 +43,35 @@ export interface GetUserDetailsResponse {
   };
   success: boolean;
 }
+
+export interface NotificationData {
+  message: string;
+  userId: string;
+  user_id: string;
+  userProfilePhoto?: string;
+  post_id?: string;
+  notificationType: string;
+  readStatus: boolean;
+  _id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationUserDetails {
+  _id: string;
+  userId: string;
+  name: string;
+  profilePhoto?: string;
+}
+
+export interface UserNotification {
+  _id: string;
+  userId: string;
+  notifications: NotificationData;
+  userDetails: NotificationUserDetails;
+}
+
+export interface GetNotificationsResponse {
+  msg: string;
+  notifications: UserNotification[];
+}

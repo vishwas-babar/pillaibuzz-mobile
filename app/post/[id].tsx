@@ -30,6 +30,11 @@ export default function PostDetails() {
   const { mutate: addComment, isPending: isAddingComment } = useAddComment();
   const { mutate: likePost, isPending: isLikingPost } = useLikePost();
 
+  const isPostLiked = useMemo(() => {
+    if (!currentUser || !postData) return false;
+    return postData.postContent.likes.includes(currentUser._id);
+  }, [currentUser, postData]);
+
   const handleAddComment = () => {
     if (!commentText.trim() || !currentUser) return;
     
@@ -182,7 +187,12 @@ export default function PostDetails() {
       <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-6 py-4 flex-row justify-between items-center shadow-lg pb-8">
         <View className="flex-row items-center space-x-6 gap-6">
           <TouchableOpacity className="flex-row items-center gap-1.5" onPress={handleLikePost}>
-            <Heart size={24} color="#ef4444" strokeWidth={2} />
+            <Heart
+              size={24}
+              color={isPostLiked ? "#ef4444" : "#64748b"}
+              fill={isPostLiked ? "#ef4444" : "transparent"}
+              strokeWidth={2}
+            />
             <Text className="text-slate-700 font-medium text-base">{postData.likesCount}</Text>
           </TouchableOpacity>
           
@@ -191,9 +201,9 @@ export default function PostDetails() {
             <Text className="text-slate-700 font-medium text-base">{comments.length}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity>
+          {/* <TouchableOpacity>
              <Bookmark size={24} color="#64748b" strokeWidth={2} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <View>
@@ -270,7 +280,7 @@ export default function PostDetails() {
                       </View>
 
                       {/* Action Row */}
-                      <View className="flex-row items-center mt-2 px-1">
+                      {/* <View className="flex-row items-center mt-2 px-1">
                          <Text className="text-slate-600 text-sm">Like</Text>
                          <Text className="text-slate-900 text-base mx-2 font-bold">&bull;</Text>
                          <View className="flex-row items-center gap-1.5">
@@ -279,7 +289,7 @@ export default function PostDetails() {
                            </View>
                            <Text className="text-slate-700 text-xs font-medium">{comment.likes.length}</Text>
                          </View>
-                      </View>
+                      </View> */}
                     </View>
                   </View>
                 );

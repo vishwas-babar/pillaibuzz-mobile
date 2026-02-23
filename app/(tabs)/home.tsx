@@ -1,10 +1,12 @@
 import PostCard from '@/components/PostCard';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useBookmarkPost } from '../../hooks/api/post/use-bookmark-post';
 import { usePosts } from '../../hooks/api/post/use-posts';
 
 export default function HomeScreen() {
+  const [bookmarkingPostId, setBookmarkingPostId] = useState<string | null>(null);
   const { 
     data, 
     isLoading, 
@@ -14,6 +16,7 @@ export default function HomeScreen() {
     refetch, 
     isRefetching 
   } = usePosts();
+  const { mutate: bookmarkPost, isPending: isBookmarkPending } = useBookmarkPost();
 
   const posts = useMemo(() => {
     if (!data) return [];
@@ -25,6 +28,15 @@ export default function HomeScreen() {
       fetchNextPage();
     }
   };
+
+  const handleToggleBookmark = useCallback((postId: string) => {
+    setBookmarkingPostId(postId);
+    bookmarkPost(postId, {
+      onSettled: () => {
+        setBookmarkingPostId((current) => (current === postId ? null : current));
+      },
+    });
+  }, [bookmarkPost]);
 
   const renderFooter = () => {
     if (!isFetchingNextPage) return <View className="h-4" />;
@@ -50,7 +62,13 @@ export default function HomeScreen() {
         <FlatList
           data={posts}
           keyExtractor={(item) => item._id}
-          renderItem={({ item }) => <PostCard post={item} />}
+          renderItem={({ item }) => (
+            <PostCard
+              post={item}
+              onToggleBookmark={handleToggleBookmark}
+              isBookmarkPending={isBookmarkPending && bookmarkingPostId === item._id}
+            />
+          )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingVertical: 16, paddingBottom: 100 }}
           onEndReached={loadMore}

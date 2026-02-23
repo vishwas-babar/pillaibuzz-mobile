@@ -22,9 +22,11 @@ export interface Post {
 
 interface PostCardProps {
   post: Post;
+  onToggleBookmark?: (postId: string) => void;
+  isBookmarkPending?: boolean;
 }
 
-export default function PostCard({ post }: PostCardProps) {
+export default function PostCard({ post, onToggleBookmark, isBookmarkPending = false }: PostCardProps) {
   const router = useRouter();
 
   const handlePress = () => {
@@ -73,7 +75,11 @@ export default function PostCard({ post }: PostCardProps) {
             <Text className="text-muted text-sm font-medium">{post.commentsCount}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => onToggleBookmark?.(post._id)}
+            disabled={!onToggleBookmark || isBookmarkPending}
+            activeOpacity={0.7}
+          >
             <Bookmark 
               size={20} 
               color={post.isBookmarked ? "#2563EB" : "#64748B"} 
